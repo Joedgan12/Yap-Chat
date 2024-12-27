@@ -1,41 +1,54 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import AuthContext from '../context/AuthContext';
+import axios from 'axios';
 import { TextField, Button, Container, Typography, Box } from '@mui/material';
 
-const Register = () => {
+const Profile = () => {
+  const authContext = useContext(AuthContext);
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     phoneNumber: '',
-    password: '',
     instagram: '',
     tiktok: '',
     snapchat: '',
+    bio: '',
+    avatar: '',
   });
 
-  const { username, email, phoneNumber, password, instagram, tiktok, snapchat } = formData;
+  const { username, email, phoneNumber, instagram, tiktok, snapchat, bio, avatar } = formData;
 
-  const authContext = useContext(AuthContext);
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const res = await axios.get('/api/profile');
+        setFormData(res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    loadProfile();
+  }, []);
 
   const onChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    authContext.register({
-      username,
-      email,
-      phoneNumber,
-      password,
-      socialMedia: { instagram, tiktok, snapchat },
-    });
+    try {
+      await axios.put('/api/profile', formData);
+      authContext.loadUser();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
     <Container maxWidth="sm">
       <Box sx={{ mt: 5 }}>
         <Typography variant="h4" component="h1" gutterBottom>
-          Register
+          Edit Profile
         </Typography>
         <form onSubmit={onSubmit}>
           <TextField
@@ -66,15 +79,6 @@ const Register = () => {
           <TextField
             fullWidth
             margin="normal"
-            label="Password"
-            type="password"
-            name="password"
-            value={password}
-            onChange={onChange}
-          />
-          <TextField
-            fullWidth
-            margin="normal"
             label="Instagram"
             name="instagram"
             value={instagram}
@@ -96,6 +100,22 @@ const Register = () => {
             value={snapchat}
             onChange={onChange}
           />
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Bio"
+            name="bio"
+            value={bio}
+            onChange={onChange}
+          />
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Avatar URL"
+            name="avatar"
+            value={avatar}
+            onChange={onChange}
+          />
           <Button
             type="submit"
             variant="contained"
@@ -103,7 +123,7 @@ const Register = () => {
             fullWidth
             sx={{ mt: 3 }}
           >
-            Register
+            Save Changes
           </Button>
         </form>
       </Box>
@@ -111,5 +131,4 @@ const Register = () => {
   );
 };
 
-export default Register;
-
+export default Profile;
